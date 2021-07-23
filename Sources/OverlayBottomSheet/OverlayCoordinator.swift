@@ -8,8 +8,11 @@
 import UIKit
 
 public class OverlayCoordinator : NSObject{
+    /// Parent UIViewController
     public weak var parent : UIViewController!
+    /// Container View to Hold Child View Controller
     private var container : UIView?
+    /// Data Source which provides necessary infomration about positioning
     public weak var dataSource :  OverlayCoordinatorDataSource! {
         didSet{
             let positions = dataSource.overlaySheetPositions(availableHeight)
@@ -17,17 +20,20 @@ public class OverlayCoordinator : NSObject{
             maximumOverlayPosition = positions.max()
         }
     }
+    /// Overlay Coordinator Delegate which is responsible for delegating tasks
     public weak var delegate : OverlayCoordinatorDelegate?
     private var minimumOveralyPosition : CGFloat?
     private var maximumOverlayPosition : CGFloat?
+    /// Total Available height of the parent view controller
     public var availableHeight: CGFloat {
         return parent.view.frame.height
     }
+    /// contains all the views the conform to draggable protocol
     public var draggables = [DraggableItem]()
     private var dropShadowView : TransitView?
     private var tolerance : CGFloat = 0.0000001
+    /// specifies whether the child is using a navigation controller if true and a normal view controller otherwise
     public var isUsingNavigationController = false
-    
     private var lastAnimatedValue: CGFloat = 0.0
     private var cornerRadius : CGFloat = 0{
         didSet{
@@ -35,7 +41,11 @@ public class OverlayCoordinator : NSObject{
             clearShadowBackground()
         }
     }
-
+    
+    /// Initialises the coordinator along with NSObject protocol
+    /// - Parameters:
+    ///   - parent: parenting UIViewController
+    ///   - delegate: Delegating Object
     public init(parent: UIViewController, delegate: OverlayCoordinatorDelegate? = nil) {
         super.init()
         self.parent = parent
@@ -46,6 +56,9 @@ public class OverlayCoordinator : NSObject{
         maximumOverlayPosition = positions.max()
     }
     
+    
+    /// Adds a container
+    /// - Parameter config: closure to apply custom configuration for the container
     public func createContainer(with config : @escaping (UIView)->Void){
         let view = TransitView()
         self.container = view
@@ -55,6 +68,11 @@ public class OverlayCoordinator : NSObject{
         setPosition(dataSource.initialPosition(availableHeight), animated: false)
     }
     
+    /// Adds the overlay on the container
+    /// - Parameters:
+    ///   - item: ideally an UIViewController or an UINavigationController
+    ///   - parent: parenting UIViewController
+    ///   - didContainerCreate: a closure to customise the item once the overlay is added
     public func addOverlaySheet(_ item : UIViewController, to parent : UIViewController, didContainerCreate : ((UIView)->Void)? = nil){
         self.isUsingNavigationController = item is UINavigationController
         let container = TransitView()
@@ -71,6 +89,8 @@ public class OverlayCoordinator : NSObject{
         setPosition(dataSource.initialPosition(availableHeight), animated: false)
     }
     
+    /// Add a child on top of existing child
+    /// - Parameter item: object which confirms to draggable protocol or UIViewController
     public func addOverlayChild(_ item : DraggableItem){
         parent.addChild(item)
         container!.addSubview(item.view)
@@ -89,6 +109,8 @@ public class OverlayCoordinator : NSObject{
                       height: parent.view.bounds.maxY - minY)
     }
     
+    /// Add a shadow effect if doesn't already exist
+    /// - Parameter config: optional custom configuration to apply for the shadow effect
     public func addDropShadowIfNotExists(_ config : ((UIView?)->Void)? = nil){
         guard dropShadowView == nil else {
             return
@@ -130,19 +152,33 @@ public class OverlayCoordinator : NSObject{
         dropShadowView?.layer.mask = mask
     }
     
+    /// Sets the position of container
+    /// - Parameters:
+    ///   - position: a CGFloat which defines the position of container
+    ///   - animated: bool whether to animte or not while setting the position
     public func setPosition(_ position : CGFloat, animated : Bool){
         endTranslate(to: position,animated: animated)
     }
     
+    /// Applies corner radius to the container
+    /// - Parameter radius: CGFloat
     public func setCornerRadius(_ radius: CGFloat) {
         self.cornerRadius = radius
     }
     
+    /// Find the nearest position and set the position to that nearest position
+    /// - Parameters:
+    ///   - position: approximate CGFloat value
+    ///   - animated: bool whether to animte or not while setting the position
     public func setToNearest(_ position: CGFloat, animated: Bool) {
          let y = dataSource.overlaySheetPositions(availableHeight).nearest(to: position)
          setPosition(y, animated: animated)
     }
     
+    /// Wraps the translation
+    /// - Parameters:
+    ///   - position: final position, CGFloat
+    ///   - animated: bool whether to animte or not while setting the position
     public func endTranslate(to position : CGFloat, animated : Bool = false){
         guard position != 0 else {
             return
@@ -176,6 +212,8 @@ public class OverlayCoordinator : NSObject{
         }
     }
     
+    /// Remove the child on the container heirarchy
+    /// - Parameter item: the item that should be removed
     public func removeSheetChild<T:DraggableItem>(item : T){
         stopTracking(item: item)
         let _item = isUsingNavigationController ? item.navigationController! : item
@@ -186,6 +224,8 @@ public class OverlayCoordinator : NSObject{
         }
     }
     
+    /// Removes the main child on the container, clearing the heirarchy
+    /// - Parameter block: any code to be executed before removing
     public func removeSheet(_ block : ((_ container : UIView?)->Void)? = nil){
         self.draggables.removeAll()
         guard block == nil else {
@@ -203,6 +243,7 @@ public class OverlayCoordinator : NSObject{
         }
     }
     
+    /// removes the drop shadow on the container
     public func removeDropShadow(){
         self.dropShadowView?.removeFromSuperview()
     }
@@ -217,6 +258,8 @@ public class OverlayCoordinator : NSObject{
         }
     }
     
+    /// starts tracking the given draggableItem
+    /// - Parameter item: either a UIViewController or anything that confirms to draggable protocol
     public func startTracking<T:DraggableItem>(item : T){
         guard !isTracking(item: item) else {
             return
@@ -231,6 +274,8 @@ public class OverlayCoordinator : NSObject{
         draggables.append(item)
     }
     
+    /// stops tracking the respective item
+    /// - Parameter item: either a UIViewController or anything that confirms to draggable protocol
     public func stopTracking<T:DraggableItem>(item : T){
         draggables.removeAll { (vc) -> Bool in
             vc == item
