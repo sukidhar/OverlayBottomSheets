@@ -4,6 +4,7 @@
 //
 //  Created by Sukidhar Darisi on 22/07/21.
 //
+#if !os(macOS)
 
 import UIKit
 
@@ -38,3 +39,4 @@ public protocol OverlayCoordinatorDataSource : AnyObject{
     func elasticBottom(_ total : CGFloat, _ limit : CGFloat) -> CGFloat
 }
 
+#endif

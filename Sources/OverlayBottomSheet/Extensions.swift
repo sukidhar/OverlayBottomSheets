@@ -4,7 +4,7 @@
 //
 //  Created by Sukidhar Darisi on 22/07/21.
 //
-
+#if !os(macOS)
 import UIKit
 
 // MARK:  Draggable
@@ -132,3 +132,4 @@ extension OverlayCoordinatorDataSource{
         return value
     }
 }
+#endif

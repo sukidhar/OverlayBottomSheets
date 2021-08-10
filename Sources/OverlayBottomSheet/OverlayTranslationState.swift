@@ -5,6 +5,7 @@
 //  Created by Sukidhar Darisi on 22/07/21.
 //
 
+#if !os(macOS)
 import UIKit
 
 public enum OverlayTranslationState {
@@ -12,3 +13,4 @@ public enum OverlayTranslationState {
     case start(_ minYPosition: CGFloat, _ percent: CGFloat)
     case finish(_ minYPosition: CGFloat, _ percent: CGFloat)
 }
+#endif
